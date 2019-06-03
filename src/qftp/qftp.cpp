@@ -105,6 +105,7 @@ public:
 
 signals:
     void listInfo(const QUrlInfo&);
+	void nlistResponse(const QString &filename);
     void readyRead();
     void dataTransferProgress(qint64, qint64);
 
@@ -688,7 +689,29 @@ void QFtpDTP::socketReadyRead()
                     err = QString::fromLatin1(line);
             }
         }
-    } else {
+    }
+	else if (pi->currentCommand().startsWith(QLatin1String("NLST"))) {
+        while (socket->canReadLine()) {
+            QByteArray line = socket->readLine();
+			if (line.endsWith('\n')) {
+				line.chop(1);
+			}
+			if (line.endsWith('\r')) {
+				line.chop(1);
+			}
+			if (!line.isEmpty()) {
+				emit nlistResponse(line);
+            }
+			else {
+                // some FTP servers don't return a 550 if the file or directory
+                // does not exist, but rather write a text to the data socket
+                // -- try to catch these cases
+                if (line.endsWith("No such file or directory\r\n"))
+                    err = QString::fromLatin1(line);
+            }
+        }
+    }
+	else {
         if (!is_ba && data.dev) {
             do {
                 QByteArray ba;
@@ -1428,6 +1451,8 @@ QFtp::QFtp(QObject *parent)
             SIGNAL(dataTransferProgress(qint64,qint64)));
     connect(&d->pi.dtp, SIGNAL(listInfo(QUrlInfo)),
             SIGNAL(listInfo(QUrlInfo)));
+	connect(&d->pi.dtp, SIGNAL(nlistResponse(QString)),
+            SIGNAL(nlistResponse(QString)));
 }
 
 /*!
@@ -1753,6 +1778,18 @@ int QFtp::list(const QString &dir)
     else
         cmds << (QLatin1String("LIST ") + dir + QLatin1String("\r\n"));
     return d->addCommand(new QFtpCommand(List, cmds));
+}
+
+int QFtp::nlist(const QString &dir)
+{
+    QStringList cmds;
+    cmds << QLatin1String("TYPE A\r\n");
+    cmds << QLatin1String(d->transferMode == Passive ? "PASV\r\n" : "PORT\r\n");
+    if (dir.isEmpty())
+        cmds << QLatin1String("NLST\r\n");
+    else
+        cmds << (QLatin1String("NLST ") + dir + QLatin1String("\r\n"));
+    return d->addCommand(new QFtpCommand(NList, cmds));
 }
 
 /*!

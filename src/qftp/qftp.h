@@ -81,6 +81,7 @@ public:
         Login,
         Close,
         List,
+		NList,
         Cd,
         Get,
         Put,
@@ -105,6 +106,7 @@ public:
     int close();
     int setTransferMode(TransferMode mode);
     int list(const QString &dir = QString());
+	int nlist(const QString &dir = QString());
     int cd(const QString &dir);
     int get(const QString &file, QIODevice *dev=0, TransferType type = Binary);
     int put(const QByteArray &data, const QString &file, TransferType type = Binary);
@@ -137,6 +139,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     void stateChanged(int);
     void listInfo(const QUrlInfo&);
+	void nlistResponse(const QString &filename);
     void readyRead();
     void dataTransferProgress(qint64, qint64);
     void rawCommandReply(int, const QString&);
