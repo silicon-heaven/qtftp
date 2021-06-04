@@ -42,9 +42,9 @@
 #ifndef QFTP_H
 #define QFTP_H
 
-#include <QtCore/qstring.h>
-#include <QtCore/qobject.h>
-#include <QtFtp/qurlinfo.h>
+#include <QString>
+#include <QObject>
+#include "qurlinfo.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -139,7 +139,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     void stateChanged(int);
     void listInfo(const QUrlInfo&);
-	void nlistResponse(const QString &filename);
+    void nlistResponse(const QString &filename);
     void readyRead();
     void dataTransferProgress(qint64, qint64);
     void rawCommandReply(int, const QString&);
